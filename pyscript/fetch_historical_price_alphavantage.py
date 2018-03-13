@@ -36,7 +36,7 @@ db=MongoClient()['NSE']
 #                               The Loop                                  #
 ##############################################################################
 
-
+print ('abc')
 def collect_historical_data(ticker, key,retry):
     i = retry
     while i:
@@ -58,7 +58,7 @@ def collect_historical_data(ticker, key,retry):
                                                 {'Datetime': 1, '_id': 0})]
             last_record = [i['Datetime'] for i in
                            db['historical_price'].find({'Scrip': ticker},
-                                                           {'_id': 0,
+                                                              {'_id': 0,
                                                             'Datetime': 1}
                                                            ).sort('Datetime',
                                                                   ASCENDING
@@ -70,7 +70,8 @@ def collect_historical_data(ticker, key,retry):
             dat = dat[~dat.Datetime.isin(prev)]
             if last_record:
                 dat = dat[dat.Datetime > last_record[0]]
-            db['daily_price'].insert_many(dat.to_dict(orient='record'))
+            if dat.shape[0]:
+                db['historical_price'].insert_many(dat.to_dict(orient='record'))
 
             return 0
         except Exception as e:
@@ -94,8 +95,19 @@ cursor = db['scrip_master'].find({},
                                     'NSE': 1,
                                     }).sort('NSE', ASCENDING)
 scrip_list=[i['NSE'] for i in cursor]
-for scrip in scrip_list:
-    collect_historical_data(scrip,apikey,15)
+n_iter = len(scrip_list) // 30 + 1
+for i in range(n_iter):
+    scrips = scrip_list[i::n_iter]
+    print(len(scrips))
+    threads = [
+        threading.Thread(target=collect_historical_data,
+                         args=(ticker, apikey,5))
+        for ticker in scrips]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    sleep(120)
 
 lst = list(db['daily_price'].find({},{'_id':0}))
 db['historical_price'].insert_many(lst)

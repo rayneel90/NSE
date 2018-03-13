@@ -39,4 +39,5 @@ while 1:
             'US/Eastern').dt.tz_convert("UTC")
         dat['Scrip']=fnm.split('_')[0]
         dat = dat[~dat.Datetime.isin(prev)]
-        db['daily_price'].insert_many(dat.to_dict(orient='record'))
+        if dat.shape[0]:
+            db['daily_price'].insert_many(dat.to_dict(orient='record'))

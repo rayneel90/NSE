@@ -65,6 +65,8 @@ def collect_daily_data(ticker, key):
 
 
 while 1:
+    if datetime.datetime.now().time() > datetime.time(16, 30, 0):
+        break
     cursor = conn['scrip_master'].find({},
                                        {'_id': 0,
                                         'NSE': 1,
@@ -81,5 +83,3 @@ while 1:
         for t in threads:
             t.join()
         sleep(120)
-    if datetime.datetime.now().time()>datetime.time(16,30,0):
-        break
