@@ -111,3 +111,5 @@ for i in range(n_iter):
 
 lst = list(db['daily_price'].find({},{'_id':0}))
 db['historical_price'].insert_many(lst)
+
+a=5
